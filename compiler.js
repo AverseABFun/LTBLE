@@ -18,6 +18,11 @@ function tokenize(code) {
         let char = code[current];
 
         if (char === ';') {
+            tokens.push({
+                type: 'loglineend',
+                value: ";"
+            });
+
             current++;
 
             continue;
