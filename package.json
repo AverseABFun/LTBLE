@@ -1,0 +1,19 @@
+{
+  "name": "ltble",
+  "version": "1.0.0",
+  "description": "Literally The Best Language Ever",
+  "main": "compiler.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AverseABFun/LTBLE.git"
+  },
+  "author": "AverseABFun",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/AverseABFun/LTBLE/issues"
+  },
+  "homepage": "https://github.com/AverseABFun/LTBLE#readme"
+}

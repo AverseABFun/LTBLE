@@ -1,0 +1,21 @@
+lang 1.0;
+include standard#console;
+include standard#error;
+include standard#sleep;
+include standard#time:units in global;
+
+program example {
+    on start {
+        console.out("Hello World!");
+        console.err("This is a fake error message!");
+        fail error("This is a real error message!");
+    }
+    on fail(e) of start {
+        console.out("This is an error handler of start!");
+        sleep(1000ms); // Other units include second(s), nanosecond(ns), minute(m), day(d), month(mo), year(y), and more!
+        console.out("The sleep just finished!");
+
+        // You can use this kind of comments...
+        #  ...or this kind!
+    }
+}
