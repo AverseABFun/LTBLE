@@ -1,8 +1,8 @@
 lang 1.0;
-include standard#console;
-include standard#error;
-include standard#sleep;
-include standard#time:units in global;
+include standard:console;
+include standard:error;
+include standard:sleep;
+include standard:time:units in global;
 
 program example {
     on start {

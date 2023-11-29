@@ -18,9 +18,14 @@ function tokenize(code) {
         let char = code[current];
 
         if (char === ';') {
+            current++;
+            continue;
+        }
+        
+        if (char === ":") {
             tokens.push({
-                type: 'loglineend',
-                value: ";"
+                type: 'namespacesep',
+                value: ":"
             });
 
             current++;
@@ -92,7 +97,7 @@ function tokenize(code) {
         }
 
         if (char === ".") {
-            tokens.push({ type: 'decimalsep', value: "." });
+            tokens.push({ type: 'dot', value: "." });
             current++;
             
             continue;
@@ -159,7 +164,76 @@ function tokenize(code) {
 }
 
 function parse(tokens) {
+    let current = 0;
 
+    function walk() {
+        let token = tokens[current];
+
+        if (token.type === 'number') {
+            current++;
+            if (tokens[current].type === "dot" && tokens[current+1].type === 'number') {
+                current += 2;
+                return {
+                    type: "NumberLiteral",
+                    value: parseFloat(token.value+"."+tokens[current+1])
+                };
+            }
+            return {
+                type: "NumberLiteral",
+                value: token.value
+            };
+        }
+
+        if (token.type === 'string') {
+            current++;
+        
+            return {
+                type: 'StringLiteral',
+                value: token.value,
+            };
+        }
+
+        if (token.type === 'brace' &&
+            token.value === '{') {
+            token = tokens[++current];
+
+            let node = {
+                type: 'Block',
+                blocks: [],
+            };
+
+            while (
+                (token.type !== 'brace') ||
+                (token.type === 'brace' && token.value !== '}')
+            ) {
+                node.blocks.push(walk());
+                token = tokens[current];
+            }
+
+            current++;
+            return node;
+        }
+        if (token.type == "keyword") {
+            current++;
+            
+            return {
+                type: "Keyword",
+                value: token.value
+            };
+        }
+        throw new TypeError(token.type + " at " + current);
+    }
+
+    let ast = {
+        type: 'Program',
+        body: [],
+    };
+
+    while (current < tokens.length) {
+        ast.body.push(walk());
+    }
+
+    return ast;
 }
 
 function traverse(ast, visitor) {
@@ -178,6 +252,7 @@ function interpret(code) {
     let tokens = tokenize(code);
     console.log(tokens);
     let ast = parse(tokens);
+    console.log(ast);
     let newAst = transform(ast);
     let output = execute(newAst);
 
