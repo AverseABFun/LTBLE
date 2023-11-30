@@ -17,7 +17,7 @@ function tokenize(code) {
 
     while (current < code.length) {
         let char = code[current];
-        stdout.write(char);
+        proccess.stdout.write(char);
 
         if (char === ';') {
             current++;
