@@ -2,7 +2,7 @@
   "name": "ltble",
   "version": "1.0.0",
   "description": "Literally The Best Language Ever",
-  "main": "compiler.js",
+  "main": "compiler.mjs",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
