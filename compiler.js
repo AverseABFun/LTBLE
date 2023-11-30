@@ -78,10 +78,14 @@ function tokenize(code) {
         let NUMBERS = /[0-9]/;
         if (NUMBERS.test(char)) {
             let value = '';
-
+            let first = true;
             while (NUMBERS.test(char)) {
                 value += char;
-                process.stdout.write(char);
+                if (!first) {
+                    process.stdout.write(char);
+                } else {
+                    first = false;
+                }
                 char = code[++current];
             }
             tokens.push({ type: 'number', value });
@@ -114,7 +118,7 @@ function tokenize(code) {
                 process.stdout.write(char);
                 char = code[++current];
             }
-      
+            process.stdout.write('"');
             char = code[++current];
             tokens.push({ type: 'string', value });
       
@@ -129,6 +133,7 @@ function tokenize(code) {
                 process.stdout.write(char);
                 char = code[++current];
             }
+            process.stdout.write("'");
       
             char = code[++current];
             tokens.push({ type: 'string', value });
@@ -213,13 +218,49 @@ function parse(tokens) {
             current++;
             return node;
         }
-        if (token.type == "keyword") {
+        if (token.type === "keyword") {
             current++;
             
             return {
                 type: "Keyword",
                 value: token.value
             };
+        }
+        if (token.type === "dot") {
+            current++;
+
+            return {
+                type: "FuncSep",
+                value: "."
+            }
+        }
+        if (token.type === "name") {
+            current++;
+
+            return {
+                type: "Name",
+                value: token.value
+            };
+        }
+        if (token.type === "paren" &&
+            token.value === "(") {
+            token = tokens[++current];
+
+            let node = {
+                type: 'Parameters',
+                params: [],
+            };
+
+            while (
+                (token.type !== 'paren') ||
+                (token.type === 'paren' && token.value !== ')')
+            ) {
+                node.params.push(walk());
+                token = tokens[current];
+            }
+
+            current++;
+            return node;
         }
         throw new TypeError(token.type + " at " + current);
     }
@@ -263,6 +304,5 @@ fs.readFile("example.ltble", 'utf8', (err, data) => {
         console.error(err);
         return;
     }
-    console.log(data);
     interpret(data);
 });
