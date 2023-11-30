@@ -11,6 +11,15 @@ let keywords = [
     "of"
 ];
 
+let keywordsWithDataAfter = [
+    "include",
+    "lang",
+    "program",
+    "of",
+    "on",
+    "in"
+];
+
 function tokenize(code) {
     let current = 0;
 
@@ -219,6 +228,25 @@ function parse(tokens) {
         }
         if (token.type === "keyword") {
             current++;
+
+            if (keywordsWithDataAfter.includes(token.value)) {
+                current++;
+                if (tokens[current].value === "in" && token.value === "include") {
+                    current++;
+                    current++;
+                    return {
+                        type: "Keyword",
+                        value: token.value,
+                        data: tokens[current-3].value,
+                        scope: tokens[current-1].value
+                    };
+                }
+                return {
+                    type: "Keyword",
+                    value: token.value,
+                    data: tokens[current-1].value
+                };
+            }
             
             return {
                 type: "Keyword",
@@ -371,8 +399,43 @@ function transform(ast) {
         },
         Keyword: {
             enter(node, parent) {
+                if (node.data) {
+                    if (node.value === "lang") {
+                        parent._context.push({
+                            type: "Keyword",
+                            value: node.value,
+                            data: parseFloat(node.data)
+                        });
+                        return;
+                    }
+                    if (node.scope) {
+                        parent._context.push({
+                            type: "Keyword",
+                            value: node.value,
+                            data: node.data,
+                            scope: node.scope
+                        });
+                    }
+                    parent._context.push({
+                        type: "Keyword",
+                        value: node.value,
+                        data: node.data
+                    });
+                    return;
+                }
+                if (!node.data && keywordsWithDataAfter.includes(node.value)) {
+                    throw SyntaxError("No data for keyword " + node.value)
+                }
                 parent._context.push({
                     type: "Keyword",
+                    value: node.value
+                });
+            }
+        },
+        Name: {
+            enter(node, parent) {
+                parent._context.push({
+                    type: "Name",
                     value: node.value
                 });
             }
