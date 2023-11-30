@@ -2,6 +2,12 @@
 const process = require('process');
 const fs = require("fs");
 
+const INTERPRETER_VERSION = 1.01;
+const INTERPRETER_STRING = "ORIGINAL VERSION - LTBLE Beef";
+const SUPPORTED_VERSIONS = [1.01];
+
+class VersionError extends Error {}
+
 let keywords = [
     "include",
     "lang",
@@ -445,12 +451,28 @@ function transform(ast) {
     return newAst;
 }
 
+let foundVersion = false;
 function execute(node) {
     switch (node.type) {
         case 'Program':
             return node.body.map(execute)
                 .join('\n');
-        
+        case 'Keyword':
+            if (node.value === "lang") {
+                if (!foundVersion) {
+                    foundVersion = true;
+                    if (!SUPPORTED_VERSIONS.includes(node.data)) {
+                        throw VersionError("Incompatible version " + node.data.toString() + " with this interpreter version " + INTERPRETER_VERSION.toString());
+                    } else {
+                        console.log("LTBLE interpreter version " + INTERPRETER_VERSION.toString());
+                        console.log(INTERPRETER_STRING);
+                    }
+                } else {
+                    throw SyntaxError("Found extra version declaration('lang " + node.data.toString() + ";')");
+                }
+            }
+        default:
+            throw new TypeError(node.type);
     }
 }
 
