@@ -15,5 +15,6 @@
   "bugs": {
     "url": "https://github.com/AverseABFun/LTBLE/issues"
   },
-  "homepage": "https://github.com/AverseABFun/LTBLE#readme"
+  "homepage": "https://github.com/AverseABFun/LTBLE#readme",
+  "type": "module"
 }

@@ -1,4 +1,5 @@
 'use strict';
+import {stdout} from process;
 
 let keywords = [
     "include",
@@ -16,7 +17,7 @@ function tokenize(code) {
 
     while (current < code.length) {
         let char = code[current];
-        console.log()
+        stdout.write(char);
 
         if (char === ';') {
             current++;
