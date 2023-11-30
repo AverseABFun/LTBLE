@@ -75,7 +75,7 @@ function tokenize(code) {
             continue;
         }
 
-        let NUMBERS = /[0-9]/;
+        let NUMBERS = /[0-9\.]/;
         if (NUMBERS.test(char)) {
             let value = '';
             let first = true;
@@ -176,11 +176,10 @@ function parse(tokens) {
 
         if (token.type === 'number') {
             current++;
-            if (tokens[current].type === "dot" && tokens[current+1].type === 'number') {
-                current += 2;
+            if (token.value instanceof String) {
                 return {
                     type: "NumberLiteral",
-                    value: parseFloat(token.value+"."+tokens[current+1])
+                    value: parseFloat(token.value)
                 };
             }
             return {
@@ -204,14 +203,14 @@ function parse(tokens) {
 
             let node = {
                 type: 'Block',
-                blocks: [],
+                body: [],
             };
 
             while (
                 (token.type !== 'brace') ||
                 (token.type === 'brace' && token.value !== '}')
             ) {
-                node.blocks.push(walk());
+                node.body.push(walk());
                 token = tokens[current];
             }
 
@@ -227,15 +226,18 @@ function parse(tokens) {
             };
         }
         if (token.type === "dot") {
-            current++;
-
-            return {
-                type: "FuncSep",
-                value: "."
-            }
+            throw new SyntaxError("Invalid position of character `.` at " + current + " in parser (context: " + JSON.stringify(tokens.slice(current-4, current+4)))
         }
         if (token.type === "name") {
             current++;
+
+            if (tokens[current].type === "dot" && tokens[current+1].type === "name") {
+                current += 2;
+                return {
+                    type: "Name",
+                    value: token.value + "." + tokens[current-1].value
+                }
+            }
 
             return {
                 type: "Name",
@@ -278,11 +280,106 @@ function parse(tokens) {
 }
 
 function traverse(ast, visitor) {
+    function traverseArray(array, parent) {
+        array.forEach(child => {
+            traverseNode(child, parent);
+        });
+    }
+    
+    function traverseNode(node, parent) {
+        let methods = visitor[node.type];
 
+        if (methods && methods.enter) {
+            methods.enter(node, parent);
+        }
+
+        switch (node.type) {
+            case 'Program':
+                traverseArray(node.body, node);
+                break;
+
+            case 'Parameters':
+                traverseArray(node.params, node);
+                break;
+            
+            case 'Block':
+                traverseArray(node.body, node);
+                break;
+            
+            case 'NumberLiteral':
+            case 'StringLiteral':
+            case 'Keyword':
+            case 'Name':
+                break;
+
+            default:
+                throw new TypeError(node.type);
+        }
+
+        if (methods && methods.exit) {
+            methods.exit(node, parent);
+        }
+    }
+
+    traverseNode(ast, null);
 }
 
 function transform(ast) {
+    let newAst = {
+        type: 'Program',
+        body: [],
+    };
 
+    ast._context = newAst.body;
+
+    traverse(ast, {
+        NumberLiteral: {
+            enter(node, parent) {
+                parent._context.push({
+                    type: 'NumberLiteral',
+                    value: node.value,
+                });
+            },
+        },
+        StringLiteral: {
+            enter(node, parent) {
+                parent._context.push({
+                    type: 'StringLiteral',
+                    value: node.value,
+                });
+          },
+        },
+        Block: {
+            enter(node, parent) {
+                let expression = {
+                    type: 'Block',
+                    body: [],
+                };
+                node._context = expression.body;
+                parent._context.push(expression);
+            },
+        },
+        Parameters: {
+            enter(node, parent) {
+                let expression = {
+                    type: 'Parameters',
+                    params: [],
+                };
+                node._context = expression.params;
+                parent._context.push(expression);
+            },
+        },
+        Keyword: {
+            enter(node, parent) {
+                parent._context.push({
+                    type: "Keyword",
+                    value: node.value
+                });
+            }
+        }
+      });
+
+    return newAst;
 }
 
 function execute(node) {
@@ -295,6 +392,7 @@ function interpret(code) {
     let ast = parse(tokens);
     console.log(ast);
     let newAst = transform(ast);
+    console.log(newAst);
     let output = execute(newAst);
 
     return output;
