@@ -1,10 +1,21 @@
 'use strict';
 const process = require('process');
 const fs = require("fs");
+const util = require("node:util");
 
 const INTERPRETER_VERSION = 1.01;
 const INTERPRETER_STRING = "ORIGINAL VERSION - LTBLE Beef";
 const SUPPORTED_VERSIONS = [1.01];
+
+const args = util.parseArgs({
+    options: {
+        file: {
+            type: "string",
+            short: "q",
+        },
+    },
+    allowPositionals: true
+});
 
 class VersionError extends Error {}
 
@@ -387,7 +398,7 @@ function transform(ast) {
             enter(node, parent) {
                 let expression = {
                     type: 'Block',
-                    body: [],
+                    body: module.body,
                 };
                 node._context = expression.body;
                 parent._context.push(expression);
@@ -470,6 +481,12 @@ function execute(node) {
                 } else {
                     throw SyntaxError("Found extra version declaration('lang " + node.data.toString() + ";')");
                 }
+            } else if (node.value === "include") {
+                if (node.scope) {
+                    include(node.data, node.scope);
+                } else {
+                    include(node.data, node.data.split(":")[0]);
+                }
             }
         default:
             throw new TypeError(node.type);
@@ -487,10 +504,10 @@ function interpret(code) {
 
     return output;
 }
-fs.readFile("example.ltble", 'utf8', (err, data) => {
+fs.readFile(args.positionals[0], 'utf8', (err, data) => {
     if (err) {
         console.error(err);
         return;
     }
-    interpret(data);
+    process.exit(interpret(data));
 });
