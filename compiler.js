@@ -1,5 +1,5 @@
 'use strict';
-import stdout from process;
+const process = require('process');
 
 let keywords = [
     "include",
