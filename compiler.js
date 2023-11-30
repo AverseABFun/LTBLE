@@ -1,5 +1,6 @@
 'use strict';
 const process = require('process');
+const fs = require("fs");
 
 let keywords = [
     "include",
@@ -80,6 +81,7 @@ function tokenize(code) {
 
             while (NUMBERS.test(char)) {
                 value += char;
+                process.stdout.write(char);
                 char = code[++current];
             }
             tokens.push({ type: 'number', value });
@@ -109,6 +111,7 @@ function tokenize(code) {
       
             while (char !== '"') {
                 value += char;
+                process.stdout.write(char);
                 char = code[++current];
             }
       
@@ -123,6 +126,7 @@ function tokenize(code) {
       
             while (char !== "'") {
                 value += char;
+                process.stdout.write(char);
                 char = code[++current];
             }
       
@@ -134,9 +138,14 @@ function tokenize(code) {
         let LETTERS = /[a-z0-9:]/i;
         if (LETTERS.test(char)) {
             let value = '';
-
+            let first = true;
             while (LETTERS.test(char)) {
                 value += char;
+                if (!first) {
+                    process.stdout.write(char);
+                } else {
+                    first = false;
+                }
                 char = code[++current];
             }
 
@@ -249,24 +258,11 @@ function interpret(code) {
 
     return output;
 }
-interpret(`lang 1.0;
-include standard#console;
-include standard#error;
-include standard#sleep;
-include standard#time:units in global;
-
-program example {
-    on start {
-        console.out("Hello World!");
-        console.err("This is a fake error message!");
-        fail error("This is a real error message!");
+fs.readFile("example.ltble", 'utf8', (err, data) => {
+    if (err) {
+        console.error(err);
+        return;
     }
-    on fail(e) of start {
-        console.out("This is an error handler of start!");
-        sleep(1000ms); // Other units include second(s), nanosecond(ns), minute(m), day(d), month(mo), year(y), and more!
-        console.out("The sleep just finished!");
-
-        // You can use this kind of comments...
-        #  ...or this kind!
-    }
-}`);
+    console.log(data);
+    interpret(data);
+});
