@@ -446,7 +446,12 @@ function transform(ast) {
 }
 
 function execute(node) {
-
+    switch (node.type) {
+        case 'Program':
+            return node.body.map(execute)
+                .join('\n');
+        
+    }
 }
 
 function interpret(code) {
