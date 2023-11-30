@@ -1,5 +1,5 @@
 'use strict';
-import {stdout} from process;
+import stdout from process;
 
 let keywords = [
     "include",
