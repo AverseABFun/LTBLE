@@ -16,20 +16,10 @@ function tokenize(code) {
 
     while (current < code.length) {
         let char = code[current];
+        console.log()
 
         if (char === ';') {
             current++;
-            continue;
-        }
-        
-        if (char === ":") {
-            tokens.push({
-                type: 'namespacesep',
-                value: ":"
-            });
-
-            current++;
-
             continue;
         }
 
@@ -140,7 +130,7 @@ function tokenize(code) {
       
             continue;
         }
-        let LETTERS = /[a-z0-9]/i;
+        let LETTERS = /[a-z0-9:]/i;
         if (LETTERS.test(char)) {
             let value = '';
 
